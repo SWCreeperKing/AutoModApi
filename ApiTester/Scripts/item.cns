@@ -2,10 +2,10 @@ type item called testItem1
     method use
         This.name = "Testing Item #1"
         print $"Player used this item: {This.name}"
-        interlop start
+        interop start
             for (var i = 0; i < 3; i++)
             {
-                Console.WriteLine("Hello from interlop!");
+                Console.WriteLine("Hello from interop!");
             } 
         end
     end

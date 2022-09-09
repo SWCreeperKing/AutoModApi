@@ -4,10 +4,28 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+
+        <PackageId>AutoModApi</PackageId>
+        <Authors>SW_CreeperKing</Authors>
+        <Description>A modding api using Attributes and inheritance with custom scripting language and auto-generated Documentation file</Description>
+        <PackageTags>modding api</PackageTags>
+        <PackageProjectUrl>https://github.com/SWCreeperKing/AutoModApi</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/SWCreeperKing/AutoModApi</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <AppxSymbolPackageEnabled>true</AppxSymbolPackageEnabled>
+        <AppxSymbolPackageOutput>snupkg</AppxSymbolPackageOutput>
+        <License>https://github.com/SWCreeperKing/AutoModApi/blob/master/LICENSE</License>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageVersion>0.1.0</PackageVersion>
+        <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+        <DebugSymbols>true</DebugSymbols>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.4.0-1.final" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.4.0-1.final"/>
     </ItemGroup>
 
 </Project>

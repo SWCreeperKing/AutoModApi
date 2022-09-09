@@ -155,7 +155,7 @@ public static class Api
         var name = $"{tName}.{nameMatch[2].Value}";
         Dictionary<string, Script> methods = new();
         var methodName = "";
-        var isInterlop = false;
+        var isInterop = false;
         StringBuilder methodBuilder = new();
 
         var i = 1;
@@ -163,10 +163,10 @@ public static class Api
         {
             var s = fileData[i];
             if (s.StartsWith("method")) methodName = s[7..];
-            else if (s == "interlop start") isInterlop = true;
+            else if (s == "interop start") isInterop = true;
             else if (s == "end")
             {
-                if (isInterlop) isInterlop = false;
+                if (isInterop) isInterop = false;
                 else if (methodName != "")
                 {
                     Type globals = null;
@@ -187,7 +187,7 @@ public static class Api
             }
             else
             {
-                if (isInterlop) methodBuilder.AppendLine(s);
+                if (isInterop) methodBuilder.AppendLine(s);
                 else
                 {
                     var rs = Replacer(s);

@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoModApi", "AutoModApi\AutoModApi.csproj", "{ED8EBF11-732E-4FA4-A8E7-CD4741167E1C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiTester", "ApiTester\ApiTester.csproj", "{E6C54EA9-C355-4A9F-AE31-D357FDF052D9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED8EBF11-732E-4FA4-A8E7-CD4741167E1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED8EBF11-732E-4FA4-A8E7-CD4741167E1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED8EBF11-732E-4FA4-A8E7-CD4741167E1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED8EBF11-732E-4FA4-A8E7-CD4741167E1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6C54EA9-C355-4A9F-AE31-D357FDF052D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6C54EA9-C355-4A9F-AE31-D357FDF052D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6C54EA9-C355-4A9F-AE31-D357FDF052D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6C54EA9-C355-4A9F-AE31-D357FDF052D9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

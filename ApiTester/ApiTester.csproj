@@ -8,8 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="Scripts/**" CopyToPublishDirectory="Always" CopyToOutputDirectory="Always"/>
-        <ProjectReference Include="..\AutoModApi\AutoModApi.csproj"/>
+        <Content Include="Scripts/**" CopyToPublishDirectory="Always" CopyToOutputDirectory="Always" />
+        <ProjectReference Include="..\AutoModApi\AutoModApi.csproj" />
     </ItemGroup>
 
 </Project>

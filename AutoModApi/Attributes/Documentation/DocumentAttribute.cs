@@ -2,7 +2,7 @@
 
 public class DocumentAttribute : Attribute
 {
-    public string documentation;
+    public readonly string documentation;
 
     public DocumentAttribute(string documentation)
     {

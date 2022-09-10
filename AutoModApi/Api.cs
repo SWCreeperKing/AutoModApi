@@ -16,8 +16,9 @@ public static class Api
     public static Dictionary<string, Dictionary<string, Type>> globalPool = new();
     public static Dictionary<string, Dictionary<string, Script>> objectPool = new();
     public static string[] scriptImports = { "System", "System.Math" };
+    public static string[] referrences = Array.Empty<string>();
 
-    public static Regex GetScrpitTypeAndName = new(@"type (.*?) called (.*)", RegexOptions.Compiled);
+    public static Regex GetScriptTypeAndName = new(@"type (.*?) called (.*)", RegexOptions.Compiled);
 
     public static void Initialize(string docPath = "")
     {
@@ -26,8 +27,8 @@ public static class Api
         {
             RegisterType(t);
         }
-    
-        PrintDocumentation(docPath);
+
+        Documentary.PrintDocumentation(docPath);
     }
 
     public static void RegisterType<T>() where T : ApiScript => RegisterType(typeof(T));
@@ -49,74 +50,6 @@ public static class Api
         }
     }
 
-    public static void PrintDocumentation(string path)
-    {
-        var file = $"{path}/README.md";
-        StringBuilder mdBuilder = new();
-        mdBuilder.Append($"# Coconut (.cns) Documentation for {projectName}\n\n");
-        mdBuilder.Append("## Table of Contents\n\n----\n\n");
-
-        var names = readableTypes.Select(GetName).ToArray();
-
-        string GetTypeLink(Type t)
-        {
-            var name = t.GetName();
-            if (names.Any() && names.Contains(name)) return $"[{name}](#{name.ToLower()})";
-            return name;
-        }
-
-        foreach (var name in names) mdBuilder.Append($"- [{name}](#{name.ToLower()})\n");
-
-        foreach (var t in readableTypes)
-        {
-            var name = t.GetName();
-            mdBuilder.Append($"\n## {name}\n\n");
-            var doc = t.GetDoc();
-            if (doc != "") mdBuilder.Append($"{doc}\n\n");
-            mdBuilder.Append($"----\n\n### {name} Fields\n\n");
-
-            foreach (var field in t.GetFields(BindingFlags.Instance | BindingFlags.Public |
-                                              BindingFlags.DeclaredOnly))
-            {
-                mdBuilder.Append($"- {GetTypeLink(field.FieldType)} `{field.GetName()}`\n");
-                var fDoc = field.GetDoc();
-                if (fDoc != "") mdBuilder.Append($"  - {fDoc}\n");
-            }
-
-            mdBuilder.Append($"\n### {name} Methods\n\n");
-            foreach (var method in t.GetMethods(BindingFlags.Instance | BindingFlags.Public |
-                                                BindingFlags.DeclaredOnly))
-            {
-                var parameters = method.GetParameters();
-
-                mdBuilder.Append($"- {GetTypeLink(method.ReturnType)} `{method.GetName()}`");
-                if (parameters.Any())
-                {
-                    mdBuilder.Append(
-                        $"({string.Join(", ", parameters.Select(t => $"{GetTypeLink(t.ParameterType)} `{t.GetName()}`"))})");
-                }
-                else mdBuilder.Append("()");
-
-                mdBuilder.Append('\n');
-
-                var mDoc = method.GetDoc();
-                if (mDoc != "") mdBuilder.Append($"  - {mDoc}\n");
-
-                if (!parameters.Any()) continue;
-                foreach (var para in parameters)
-                {
-                    var pDoc = para.GetDoc();
-                    if (pDoc == "") continue;
-                    mdBuilder.Append(
-                        $"  - Parameter: {GetTypeLink(para.ParameterType)} `{para.GetName()}`\n    - {para.GetDoc()}\n");
-                }
-            }
-        }
-
-        using var sw = File.CreateText(file);
-        sw.Write(mdBuilder);
-    }
-
     public static void ReadDir(string directory, bool recurse = true)
     {
         foreach (var file in Directory.GetFiles(directory).Where(s => s.EndsWith(".cns"))) ReadFile(file);
@@ -135,7 +68,7 @@ public static class Api
             lines.Add(line.Replace("\r", "").Trim());
         }
 
-        Interpret(lines);
+        Interpret(lines.ToArray());
     }
 
     public static T CreateType<T>(string name) where T : ApiScript
@@ -148,9 +81,9 @@ public static class Api
         return instanced;
     }
 
-    public static void Interpret(List<string> fileData)
+    public static void Interpret(string[] fileData)
     {
-        var nameMatch = GetScrpitTypeAndName.Match(fileData[0]).Groups;
+        var nameMatch = GetScriptTypeAndName.Match(fileData[0]).Groups;
         var tName = nameMatch[1].Value;
         var name = $"{tName}.{nameMatch[2].Value}";
         Dictionary<string, Script> methods = new();
@@ -159,7 +92,7 @@ public static class Api
         StringBuilder methodBuilder = new();
 
         var i = 1;
-        for (; i < fileData.Count; i++)
+        for (; i < fileData.Length; i++)
         {
             var s = fileData[i];
             if (s.StartsWith("method")) methodName = s[7..];
@@ -169,7 +102,7 @@ public static class Api
                 if (isInterop) isInterop = false;
                 else if (methodName != "")
                 {
-                    Type globals = null;
+                    Type? globals = null;
 
                     if (globalPool.ContainsKey(tName) && globalPool[tName].ContainsKey(methodName))
                     {
@@ -177,6 +110,8 @@ public static class Api
                     }
 
                     var options = ScriptOptions.Default.WithImports(scriptImports);
+                    if (referrences.Any()) options.WithReferences(referrences);
+
                     var script = CSharpScript.Create(methodBuilder.ToString(), options, globalsType: globals);
                     script.Compile();
                     methods.Add(methodName, script);
@@ -190,25 +125,34 @@ public static class Api
                 if (isInterop) methodBuilder.AppendLine(s);
                 else
                 {
-                    var rs = Replacer(s);
+                    var rs = InterpretReplacer(s);
                     if (rs == "") continue;
                     methodBuilder.AppendLine(rs);
                 }
             }
         }
 
+        i++;
+
         objectPool.Add(name, methods);
 
-        if (i + 1 < fileData.Count) Interpret(fileData.GetRange(i, i - fileData.Count));
+        if (i + 1 < fileData.Length) Interpret(fileData[i..]);
     }
 
-    public static string Replacer(string toReplace)
+    public static string InterpretReplacer(string toReplace)
     {
-        if (toReplace.StartsWith("print")) return $"Console.WriteLine({toReplace[6..]});";
+        if (!toReplace.Contains(' ')) return toReplace.EndsWith(";") ? toReplace : toReplace + ';';
+        var keyWord = toReplace[..toReplace.IndexOf(' ')];
+        if (Replacer.replacer.ContainsKey(keyWord)) return Replacer.replacer[keyWord].Invoke(toReplace);
         return toReplace.EndsWith(";") ? toReplace : toReplace + ';';
     }
 
     #region GetName/GetDoc stuff
+
+    public static string Repeat(this string repeater, int amount)
+    {
+        return string.Join("", Enumerable.Repeat(repeater, amount));
+    }
 
     public static string GetDoc(this Type t)
     {

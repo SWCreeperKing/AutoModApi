@@ -10,3 +10,9 @@ type item called testItem1
         end
     end
 end
+
+type item called testItem2
+    method use
+        This.name = "hello"
+    end
+end

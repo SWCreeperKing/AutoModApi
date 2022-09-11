@@ -2,10 +2,15 @@
 
 public class ApiArgumentAttribute : Attribute
 {
-    public string methodName;
+    public string[] methodNames;
 
     public ApiArgumentAttribute(string methodName)
     {
-        this.methodName = methodName;
+        methodNames = new[] { methodName };
+    }
+    
+    public ApiArgumentAttribute(params string[] methodNames)
+    {
+        this.methodNames = methodNames;
     }
 }

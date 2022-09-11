@@ -53,7 +53,8 @@ public static class Api
             var cas = nested.GetCustomAttributes<ApiArgumentAttribute>();
             if (!cas.Any()) continue;
             if (!GlobalPool.ContainsKey(tName)) GlobalPool.Add(tName, new Dictionary<string, Type>());
-            GlobalPool[tName].Add(cas.First().methodName, nested);
+
+            foreach (var ca in cas.First().methodNames) GlobalPool[tName].Add(ca, nested);
         }
     }
 
@@ -75,7 +76,7 @@ public static class Api
         instanced.scripts = ObjectPool[$"{typeName}.{name}"];
         return instanced;
     }
-    
+
     public static T CreateType<T>(string name, params object[] parameters) where T : ApiScript
     {
         var typeName = typeof(T).GetName();

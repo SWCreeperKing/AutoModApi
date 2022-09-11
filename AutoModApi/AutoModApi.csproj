@@ -17,9 +17,8 @@
         <License>https://github.com/SWCreeperKing/AutoModApi/blob/master/LICENSE</License>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageVersion>0.1.3</PackageVersion>
-        <PackageReleaseNotes>- support for constructors
-- better support for return types</PackageReleaseNotes>
+        <PackageVersion>0.1.4</PackageVersion>
+        <PackageReleaseNotes>- single argument att can have multiple now </PackageReleaseNotes>
         <DebugSymbols>true</DebugSymbols>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>

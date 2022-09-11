@@ -1,6 +1,6 @@
 type item called testItem1
     method use
-        This.name = "Testing Item #1"
+        .name = "Testing Item #1"
         print $"Player used this item: {This.name}"
         interop start
             for (var i = 0; i < 3; i++)
@@ -14,5 +14,11 @@ end
 type item called testItem2
     method use
         This.name = "hello"
+    end
+end
+
+type item called testItem3
+    method use
+        .i++
     end
 end

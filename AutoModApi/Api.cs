@@ -1,24 +1,31 @@
 ﻿using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using AutoModApi.Attributes.Api;
 using AutoModApi.Attributes.Documentation;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
 namespace AutoModApi;
 
 public static class Api
 {
-    public static readonly List<Type> readableTypes = new();
-    public static string projectName = "Untitled App";
-    public static Dictionary<string, Type> typeDictionary = new();
-    public static Dictionary<string, Dictionary<string, Type>> globalPool = new();
-    public static Dictionary<string, Dictionary<string, Script>> objectPool = new();
-    public static string[] scriptImports = { "System", "System.Math" };
-    public static string[] referrences = Array.Empty<string>();
+    public static readonly List<Type> ReadableTypes = new();
+    public static readonly Dictionary<string, Type> TypeDictionary = new();
+    public static readonly Dictionary<string, Dictionary<string, Type>> GlobalPool = new();
+    public static readonly Dictionary<string, Dictionary<string, Script>> ObjectPool = new();
 
-    public static Regex GetScriptTypeAndName = new(@"type (.*?) called (.*)", RegexOptions.Compiled);
+    public static float CompilationPercent { get; private set; }
+
+    public static string projectName = "Untitled App";
+    public static ICompiler interpretCompiler = new DefaultCompiler();
+
+    private static readonly Action<float> _setPercent = f => CompilationPercent = f;
+    private static readonly List<Action<string>> _onRegister = new();
+    private static readonly List<string> _toRegister = new();
+
+    public static event Action<string> OnRegister
+    {
+        add => _onRegister.Add(value);
+        remove => _onRegister.Remove(value);
+    }
 
     public static void Initialize(string docPath = "")
     {
@@ -35,18 +42,18 @@ public static class Api
 
     public static void RegisterType(Type t)
     {
-        if (readableTypes.Contains(t)) return;
+        if (ReadableTypes.Contains(t)) return;
         if (t.BaseType != typeof(ApiScript) || t == typeof(ApiScript)) return;
-        readableTypes.Add(t);
+        ReadableTypes.Add(t);
         var tName = t.GetName();
-        typeDictionary.Add(tName, t);
+        TypeDictionary.Add(tName, t);
 
         foreach (var nested in t.GetNestedTypes())
         {
             var cas = nested.GetCustomAttributes<ApiArgumentAttribute>();
             if (!cas.Any()) continue;
-            if (!globalPool.ContainsKey(tName)) globalPool.Add(tName, new Dictionary<string, Type>());
-            globalPool[tName].Add(cas.First().methodName, nested);
+            if (!GlobalPool.ContainsKey(tName)) GlobalPool.Add(tName, new Dictionary<string, Type>());
+            GlobalPool[tName].Add(cas.First().methodName, nested);
         }
     }
 
@@ -57,94 +64,54 @@ public static class Api
         foreach (var dir in Directory.GetDirectories(directory)) ReadDir(dir);
     }
 
-    public static void ReadFile(string file)
-    {
-        List<string> lines = new();
-        using StreamReader sr = new(file);
-        while (!sr.EndOfStream)
-        {
-            var line = sr.ReadLine();
-            if (line is null or "") continue;
-            lines.Add(line.Replace("\r", "").Trim());
-        }
-
-        Interpret(lines.ToArray());
-    }
+    public static void ReadFile(string file) => _toRegister.Add(file);
 
     public static T CreateType<T>(string name) where T : ApiScript
     {
         var typeName = typeof(T).GetName();
         var objName = $"{typeName}.{name}";
-        if (!objectPool.ContainsKey(objName)) throw new ArgumentException($"Type [{objName}] does not exist");
+        if (!ObjectPool.ContainsKey(objName)) throw new ArgumentException($"Type [{objName}] does not exist");
         var instanced = Activator.CreateInstance<T>();
-        instanced.scripts = objectPool[$"{typeName}.{name}"];
+        instanced.scripts = ObjectPool[$"{typeName}.{name}"];
         return instanced;
     }
 
-    public static void Interpret(string[] fileData)
+    public static void Compile()
     {
-        var nameMatch = GetScriptTypeAndName.Match(fileData[0]).Groups;
-        var tName = nameMatch[1].Value;
-        var name = $"{tName}.{nameMatch[2].Value}";
-        Dictionary<string, Script> methods = new();
-        var methodName = "";
-        var isInterop = false;
-        StringBuilder methodBuilder = new();
-
-        var i = 1;
-        for (; i < fileData.Length; i++)
+        void AddToDict(string[] file)
         {
-            var s = fileData[i];
-            if (s.StartsWith("method")) methodName = s[7..];
-            else if (s == "interop start") isInterop = true;
-            else if (s == "end")
-            {
-                if (isInterop) isInterop = false;
-                else if (methodName != "")
-                {
-                    Type? globals = null;
-
-                    if (globalPool.ContainsKey(tName) && globalPool[tName].ContainsKey(methodName))
-                    {
-                        globals = globalPool[tName][methodName];
-                    }
-
-                    var options = ScriptOptions.Default.WithImports(scriptImports);
-                    if (referrences.Any()) options.WithReferences(referrences);
-
-                    var script = CSharpScript.Create(methodBuilder.ToString(), options, globalsType: globals);
-                    script.Compile();
-                    methods.Add(methodName, script);
-                    methodName = "";
-                    methodBuilder.Clear();
-                }
-                else break;
-            }
-            else
-            {
-                if (isInterop) methodBuilder.AppendLine(s);
-                else
-                {
-                    var rs = InterpretReplacer(s);
-                    if (rs == "") continue;
-                    methodBuilder.AppendLine(rs);
-                }
-            }
+            var add = interpretCompiler.Compile(file, out var continuation);
+            if (add is null) return;
+            var addV = add.Value;
+            ObjectPool.Add(addV.Key, addV.Value);
+            foreach (var o in _onRegister) o.Invoke(addV.Key);
+            if (continuation.Any()) AddToDict(continuation);
         }
 
-        i++;
+        Task.Run(async () =>
+        {
+            CompilationPercent = 0;
+            var files = _toRegister.Count;
 
-        objectPool.Add(name, methods);
+            for (var i = 0; i < files; i++)
+            {
+                CompilationPercent = (i + .01f) / files;
+                List<string> lines = new();
+                using StreamReader sr = new(_toRegister[i]);
+                while (!sr.EndOfStream)
+                {
+                    var line = await sr.ReadLineAsync();
+                    if (line is null or "") continue;
+                    lines.Add(line.Replace("\r", "").Trim());
+                }
 
-        if (i + 1 < fileData.Length) Interpret(fileData[i..]);
-    }
+                CompilationPercent = (i + .5f) / files;
 
-    public static string InterpretReplacer(string toReplace)
-    {
-        if (!toReplace.Contains(' ')) return toReplace.EndsWith(";") ? toReplace : toReplace + ';';
-        var keyWord = toReplace[..toReplace.IndexOf(' ')];
-        if (Replacer.replacer.ContainsKey(keyWord)) return Replacer.replacer[keyWord].Invoke(toReplace);
-        return toReplace.EndsWith(";") ? toReplace : toReplace + ';';
+                AddToDict(lines.ToArray());
+            }
+
+            CompilationPercent = 1;
+        });
     }
 
     #region GetName/GetDoc stuff

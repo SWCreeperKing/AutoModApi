@@ -8,6 +8,7 @@ namespace ApiTester;
 public class Item : ApiScript
 {
     [Document("Name of item")] public string name = "Unknown Item";
+    [Document("test var")] public int i;
     public int hardness;
 
     [Api("use"), Document("Called when item is used")]
@@ -25,5 +26,6 @@ public class Item : ApiScript
     }
 
     [ApiArgument("use")] public record UseArgs(Item This);
+
     [ApiArgument("OnPlayerJump")] public record JumpArguments(Item This, float Height, int Block);
 }

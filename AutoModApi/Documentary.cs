@@ -7,7 +7,6 @@ namespace AutoModApi;
 
 public static class Documentary
 {
-    
     public static void PrintDocumentation(string path)
     {
         var file = $"{path}/README.md";
@@ -18,7 +17,7 @@ public static class Documentary
         var enums = Assembly.GetEntryAssembly()!.GetTypes().Where(t => t.IsEnum)
             .Where(t => t.GetCustomAttributes<EnumDocAttribute>().Any()).ToList();
 
-        var names = readableTypes.Concat(enums).Select(Api.GetName).ToArray();
+        var names = ReadableTypes.Concat(enums).Select(Api.GetName).ToArray();
 
         string GetTypeLink(Type t)
         {
@@ -29,7 +28,7 @@ public static class Documentary
 
         foreach (var name in names) mdBuilder.Append($"- [{name}](#{name.ToLower()})\n");
 
-        foreach (var t in readableTypes)
+        foreach (var t in ReadableTypes)
         {
             var name = t.GetName();
             mdBuilder.Append($"\n## {name}\n\n");

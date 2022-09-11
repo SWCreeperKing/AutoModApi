@@ -138,6 +138,12 @@ public static class Api
         return !cas.Any() ? "" : cas[0].documentation;
     }
 
+    public static string GetDoc(this PropertyInfo t)
+    {
+        var cas = t.GetCustomAttributes<DocumentAttribute>().ToList();
+        return !cas.Any() ? "" : cas[0].documentation;
+    }
+
     public static string GetDoc(this FieldInfo t)
     {
         var cas = t.GetCustomAttributes<DocumentAttribute>().ToList();

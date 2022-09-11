@@ -1,7 +1,7 @@
 type item called testItem1
     method use
-        print $"Player used this item: {This.name}"
         .name = "Testing Item #1"
+        print $"Player used this item: {This.name}"
         interop start
             for (var i = 0; i < 3; i++)
             {

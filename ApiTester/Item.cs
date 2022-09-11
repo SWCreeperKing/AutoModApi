@@ -15,7 +15,7 @@ public class Item : ApiScript
     public void OnUse() => Execute("use", new UseArgs(this));
 
     [Document("When player decides to jump")]
-    public void OnPlayerJump(float height, [Document("Block jumped from")] int block)
+    public void OnPlayerJump(float height, int block)
     {
         Execute("OnPlayerJump", new JumpArguments(this, height, block));
     }
@@ -27,5 +27,6 @@ public class Item : ApiScript
 
     [ApiArgument("use")] public record UseArgs(Item This);
 
-    [ApiArgument("OnPlayerJump")] public record JumpArguments(Item This, float Height, int Block);
+    [ApiArgument("OnPlayerJump")]
+    public record JumpArguments(Item This, float Height, [Document("Block jumped from")] int Block);
 }

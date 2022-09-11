@@ -21,7 +21,7 @@ while (Api.CompilationPercent != 1)
     Task.Delay(150).GetAwaiter().GetResult();
     Console.SetCursorPosition(0, 0);
     Console.WriteLine(
-        $"Compilation Progress: [{Api.CompilationPercent:000.00%}]\nCompiling Please Wait [{".".Repeat(i)}{" ".Repeat(3 - i)}]    ");
+        $"Compilation Progress: [{Api.CompilationPercent:##0.##%}]         \nCompiling Please Wait [{".".Repeat(i)}{" ".Repeat(3 - i)}]      ");
     i %= 3;
 }
 

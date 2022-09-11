@@ -14,6 +14,8 @@ public class DefaultCompiler : ICompiler
 {
     public static string[] scriptImports = { "System", "System.Math" };
     public static string[] referrences = Array.Empty<string>();
+    
+    // regex
     public static Regex GetTypeAndName = new(@"type (.*?) called (.*)", RegexOptions.Compiled);
     public static Regex GetPrint = new(@"print (.*)", RegexOptions.Compiled);
 

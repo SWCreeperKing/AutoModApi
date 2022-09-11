@@ -17,10 +17,10 @@
         <License>https://github.com/SWCreeperKing/AutoModApi/blob/master/LICENSE</License>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageVersion>0.1.1</PackageVersion>
-        <PackageReleaseNotes>- fixed spelling mistakes :)
-- added enums to auto-docs (EnumDoc attribute required)
-- back to top added to auto-docs</PackageReleaseNotes>
+        <PackageVersion>0.1.2</PackageVersion>
+        <PackageReleaseNotes>- fixed small performance mistake
+- small refactor
+- get loading percent</PackageReleaseNotes>
         <DebugSymbols>true</DebugSymbols>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>

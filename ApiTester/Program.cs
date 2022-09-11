@@ -11,6 +11,7 @@ Api.projectName = "Testing Project";
 Api.ReadDir("Scripts");
 Api.Initialize("Scripts");
 
+// loading
 var i = 0;
 Api.Compile();
 
@@ -28,13 +29,13 @@ Console.SetCursorPosition(0, 1);
 Console.WriteLine("                                                   ");
 Console.SetCursorPosition(0, 1);
 
+// main test
 sw.Stop();
 Console.WriteLine($"Compile Time: [{sw.Elapsed}]");
 
 sw.Reset();
 sw.Start();
 
-// main test
 var testItem1 = Api.CreateType<Item>("testItem1");
 testItem1.OnUse();
 

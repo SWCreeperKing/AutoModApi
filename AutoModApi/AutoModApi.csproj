@@ -17,9 +17,8 @@
         <License>https://github.com/SWCreeperKing/AutoModApi/blob/master/LICENSE</License>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageVersion>0.1.7</PackageVersion>
-        <PackageReleaseNotes>- can use method parameters as in docs
-- fixed execute and made it a bit better</PackageReleaseNotes>
+        <PackageVersion>0.1.7.1</PackageVersion>
+        <PackageReleaseNotes>- why does it prioritize &lt;T&gt;? W.E. using ExecuteAndReturn now</PackageReleaseNotes>
         <DebugSymbols>true</DebugSymbols>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>

@@ -75,6 +75,16 @@ public static class Api
         instanced.scripts = ObjectPool[$"{typeName}.{name}"];
         return instanced;
     }
+    
+    public static T CreateType<T>(string name, params object[] parameters) where T : ApiScript
+    {
+        var typeName = typeof(T).GetName();
+        var objName = $"{typeName}.{name}";
+        if (!ObjectPool.ContainsKey(objName)) throw new ArgumentException($"Type [{objName}] does not exist");
+        var instanced = (T) Activator.CreateInstance(typeof(T), parameters)!;
+        instanced.scripts = ObjectPool[$"{typeName}.{name}"];
+        return instanced;
+    }
 
     public static void Compile()
     {

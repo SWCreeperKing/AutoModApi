@@ -11,10 +11,16 @@ public class ApiScript
         if (!scripts.ContainsKey(method)) return null;
         return (await scripts[method].RunAsync()).ReturnValue;
     }
-    
+
     public async Task<object> Execute(string method, object inputData)
     {
         if (!scripts.ContainsKey(method)) return null;
         return (await scripts[method].RunAsync(inputData)).ReturnValue;
+    }
+
+    public async Task<T> Execute<T>(string method, object inputData)
+    {
+        if (!scripts.ContainsKey(method)) throw new ArgumentException($"Method [{method}] does not exist");
+        return (T) (await scripts[method].RunAsync(inputData)).ReturnValue;
     }
 }

@@ -20,7 +20,7 @@ public class Item : ApiScript
         Execute("OnPlayerJump", new JumpArguments(this, height, block));
     }
 
-    [Document("Interaction with another item")]
+    [Document("Interaction with another item"), ArgumentOverride]
     public void Interact([Document("item interacted with")] Item item)
     {
     }

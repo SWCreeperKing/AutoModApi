@@ -48,6 +48,8 @@ public static class Documentary
             foreach (var method in t.GetMethods(BindingFlags.Instance | BindingFlags.Public |
                                                 BindingFlags.DeclaredOnly))
             {
+                var useOverride = method.GetCustomAttributes<ArgumentOverrideAttribute>().Any();
+                var parameters = method.GetParameters();
                 var mName = method.GetName();
                 var para = GlobalPool.ContainsKey(name)
                     ? GlobalPool[name].ContainsKey(mName) ? GlobalPool[name][mName] : null
@@ -55,7 +57,13 @@ public static class Documentary
 
                 mdBuilder.Append($"- {GetTypeLink(method.ReturnType)} `{mName}`");
                 mdBuilder.Append('(');
-                if (para is not null)
+
+                if (parameters.Any() && useOverride)
+                {
+                    mdBuilder.Append(
+                        $"({string.Join(", ", parameters.Select(t => $"{GetTypeLink(t.ParameterType)} `{t.GetName()}`"))})");
+                }
+                else if (para is not null && !useOverride)
                 {
                     var fields = para.GetProperties();
                     for (var i = 0; i < fields.Length; i++)
@@ -73,14 +81,27 @@ public static class Documentary
                 var mDoc = method.GetDoc();
                 if (mDoc != "") mdBuilder.Append($"  - {mDoc}\n");
 
-                if (para is null) continue;
+                if (para is null || (useOverride && !parameters.Any())) continue;
                 var properties = para.GetConstructors().First().GetParameters();
-                foreach (var prop in properties)
+                if (useOverride)
                 {
-                    var pDoc = prop.GetDoc();
-                    if (pDoc == "") continue;
-                    mdBuilder.Append(
-                        $"  - Parameter: {GetTypeLink(prop.ParameterType)} `{prop.Name}`\n    - {pDoc}\n");
+                    foreach (var paraInfo in parameters)
+                    {
+                        var pDoc = paraInfo.GetDoc();
+                        if (pDoc == "") continue;
+                        mdBuilder.Append(
+                            $"  - Parameter: {GetTypeLink(paraInfo.ParameterType)} `{paraInfo.GetName()}`\n    - {paraInfo.GetDoc()}\n");
+                    }
+                }
+                else
+                {
+                    foreach (var prop in properties)
+                    {
+                        var pDoc = prop.GetDoc();
+                        if (pDoc == "") continue;
+                        mdBuilder.Append(
+                            $"  - Parameter: {GetTypeLink(prop.ParameterType)} `{prop.Name}`\n    - {pDoc}\n");
+                    }
                 }
             }
         }

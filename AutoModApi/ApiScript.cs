@@ -6,16 +6,22 @@ public class ApiScript
 {
     public Dictionary<string, Script> scripts = new();
 
-    public async Task<object> Execute(string method, object def = null)
+    public async Task Execute(string method)
     {
-        return !scripts.ContainsKey(method) ? def : (await scripts[method].RunAsync()).ReturnValue;
+        if (scripts.ContainsKey(method)) await scripts[method].RunAsync();
     }
 
-    public async Task<object> Execute(string method, object inputData, object def = null)
+    public async Task Execute(string method, object inputData)
     {
-        return !scripts.ContainsKey(method) ? def : (await scripts[method].RunAsync(inputData)).ReturnValue;
+        if (scripts.ContainsKey(method)) await scripts[method].RunAsync(inputData);
     }
 
+    public async Task<T> Execute<T>(string method, T def)
+    {
+        if (!scripts.ContainsKey(method)) return def;
+        return (T) (await scripts[method].RunAsync()).ReturnValue;
+    }
+    
     public async Task<T> Execute<T>(string method, object inputData, T def)
     {
         if (!scripts.ContainsKey(method)) return def;

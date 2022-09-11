@@ -6,21 +6,19 @@ public class ApiScript
 {
     public Dictionary<string, Script> scripts = new();
 
-    public async Task<object> Execute(string method)
+    public async Task<object> Execute(string method, object def = null)
     {
-        if (!scripts.ContainsKey(method)) return null;
-        return (await scripts[method].RunAsync()).ReturnValue;
+        return !scripts.ContainsKey(method) ? def : (await scripts[method].RunAsync()).ReturnValue;
     }
 
-    public async Task<object> Execute(string method, object inputData)
+    public async Task<object> Execute(string method, object inputData, object def = null)
     {
-        if (!scripts.ContainsKey(method)) return null;
-        return (await scripts[method].RunAsync(inputData)).ReturnValue;
+        return !scripts.ContainsKey(method) ? def : (await scripts[method].RunAsync(inputData)).ReturnValue;
     }
 
-    public async Task<T> Execute<T>(string method, object inputData)
+    public async Task<T> Execute<T>(string method, object inputData, T def)
     {
-        if (!scripts.ContainsKey(method)) throw new ArgumentException($"Method [{method}] does not exist");
+        if (!scripts.ContainsKey(method)) return def;
         return (T) (await scripts[method].RunAsync(inputData)).ReturnValue;
     }
 }

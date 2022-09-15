@@ -9,18 +9,18 @@ public class Item : ApiScript
 {
     [Document("Name of item")] public string name = "Unknown Item";
     [Document("test var")] public int i;
-    public int hardness;
+    [DocIgnore] public int hardness;
 
     [Api("use"), Document("Called when item is used")]
     public void OnUse() => Execute("use", new UseArgs(this));
 
     [Document("When player decides to jump")]
-    public void OnPlayerJump(float height, int block)
+    public void OnPlayerJump(Player player, float height, int block)
     {
-        Execute("OnPlayerJump", new JumpArguments(this, height, block));
+        Execute("OnPlayerJump", new JumpArguments(this, player, height, block));
     }
 
-    [Document("Interaction with another item"), ArgumentOverride]
+    [Document("Interaction with another item"), ArgumentOverride, DocIgnore]
     public void Interact([Document("item interacted with")] Item item)
     {
     }
@@ -28,5 +28,5 @@ public class Item : ApiScript
     [ApiArgument("use")] public record UseArgs(Item This);
 
     [ApiArgument("OnPlayerJump")]
-    public record JumpArguments(Item This, float Height, [Document("Block jumped from")] int Block);
+    public record JumpArguments(Item This, Player Player, float Height, [Document("Block jumped from")] int Block);
 }

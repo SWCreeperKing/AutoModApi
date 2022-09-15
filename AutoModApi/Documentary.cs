@@ -5,7 +5,7 @@ using static AutoModApi.Api;
 
 namespace AutoModApi;
 
-public static class Documentary
+public sealed class Documentary
 {
     public static void PrintDocumentation(string path)
     {
@@ -17,7 +17,7 @@ public static class Documentary
         var enums = Assembly.GetEntryAssembly()!.GetTypes().Where(t => t.IsEnum)
             .Where(t => t.GetCustomAttributes<EnumDocAttribute>().Any()).ToList();
 
-        var names = ReadableTypes.Concat(enums).Select(Api.GetName).ToArray();
+        var names = ReadableTypes.Where(t => !DocExcludeTypes.Contains(t)).Concat(enums).Select(Api.GetName).ToArray();
 
         string GetTypeLink(Type t)
         {
@@ -30,6 +30,7 @@ public static class Documentary
 
         foreach (var t in ReadableTypes)
         {
+            if (DocExcludeTypes.Contains(t)) continue;
             var name = t.GetName();
             mdBuilder.Append($"\n## {name}\n\n");
             var doc = t.GetDoc();
@@ -39,6 +40,7 @@ public static class Documentary
             foreach (var field in t.GetFields(BindingFlags.Instance | BindingFlags.Public |
                                               BindingFlags.DeclaredOnly))
             {
+                if (field.GetCustomAttributes<DocIgnoreAttribute>().Any()) continue;
                 mdBuilder.Append($"- {GetTypeLink(field.FieldType)} `{field.GetName()}`\n");
                 var fDoc = field.GetDoc();
                 if (fDoc != "") mdBuilder.Append($"  - {fDoc}\n");
@@ -48,6 +50,7 @@ public static class Documentary
             foreach (var method in t.GetMethods(BindingFlags.Instance | BindingFlags.Public |
                                                 BindingFlags.DeclaredOnly))
             {
+                if (method.GetCustomAttributes<DocIgnoreAttribute>().Any()) continue;
                 var useOverride = method.GetCustomAttributes<ArgumentOverrideAttribute>().Any();
                 var parameters = method.GetParameters();
                 var mName = method.GetName();

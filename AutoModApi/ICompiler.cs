@@ -10,7 +10,7 @@ public interface ICompiler
     public KeyValuePair<string, Dictionary<string, Script>>? Compile(string[] fileData, out string[] continuation);
 }
 
-public class DefaultCompiler : ICompiler
+public sealed class DefaultCompiler : ICompiler
 {
     public static string[] scriptImports = { "System", "System.Math" };
     public static string[] referrences = Array.Empty<string>();

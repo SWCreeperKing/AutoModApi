@@ -8,6 +8,7 @@ namespace AutoModApi;
 public static class Api
 {
     public static readonly List<Type> ReadableTypes = new();
+    public static readonly List<Type> DocExcludeTypes = new();
     public static readonly Dictionary<string, Type> TypeDictionary = new();
     public static readonly Dictionary<string, Dictionary<string, Type>> GlobalPool = new();
     public static readonly Dictionary<string, Dictionary<string, Script>> ObjectPool = new();
@@ -45,6 +46,9 @@ public static class Api
         if (ReadableTypes.Contains(t)) return;
         if (t.BaseType != typeof(ApiScript) || t == typeof(ApiScript)) return;
         ReadableTypes.Add(t);
+        
+        if (t.GetCustomAttributes<DocIgnoreAttribute>().Any()) DocExcludeTypes.Add(t);
+        
         var tName = t.GetName();
         TypeDictionary.Add(tName, t);
 

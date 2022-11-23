@@ -7,8 +7,9 @@ namespace AutoModApi;
 
 public sealed class Documentary
 {
-    public static void PrintDocumentation(string path)
+    public static void PrintDocumentation(string path, string notes = "")
     {
+        var bindAtt = BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly;
         var file = $"{path}/README.md";
         StringBuilder mdBuilder = new();
         mdBuilder.Append($"# Coconut Script (.cns) Documentation for {projectName}\n\n");
@@ -23,10 +24,22 @@ public sealed class Documentary
         {
             var name = t.GetName();
             if (names.Any() && names.Contains(name)) return $"[{name}](#{name.ToLower()})";
+            foreach (var rawName in names.Where(s => name.Contains(s, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                name = name.Replace(rawName, $"[{rawName}](#{rawName.ToLower()})",
+                    StringComparison.CurrentCultureIgnoreCase);
+            }
+
             return name;
         }
 
         foreach (var name in names) mdBuilder.Append($"- [{name}](#{name.ToLower()})\n");
+        if (notes != "")
+        {
+            mdBuilder.Append("- [Notes](#notes)\n\n## Notes\n\n");
+            mdBuilder.Append("----\n\n[Back to Top](#table-of-contents)\n");
+            mdBuilder.Append($"\n```\n{notes}\n```\n");
+        }
 
         foreach (var t in ReadableTypes)
         {
@@ -35,23 +48,44 @@ public sealed class Documentary
             mdBuilder.Append($"\n## {name}\n\n");
             var doc = t.GetDoc();
             if (doc != "") mdBuilder.Append($"{doc}\n\n");
-            mdBuilder.Append($"----\n\n[Back to Top](#table-of-contents)\n\n### {name} Fields\n\n");
+            mdBuilder.Append("----\n\n[Back to Top](#table-of-contents)\n");
 
-            foreach (var field in t.GetFields(BindingFlags.Instance | BindingFlags.Public |
-                                              BindingFlags.DeclaredOnly))
+            var tProperties = t.GetProperties(bindAtt);
+            if (tProperties.Any())
             {
-                if (field.GetCustomAttributes<DocIgnoreAttribute>().Any()) continue;
-                mdBuilder.Append($"- {GetTypeLink(field.FieldType)} `{field.GetName()}`\n");
-                var fDoc = field.GetDoc();
-                if (fDoc != "") mdBuilder.Append($"  - {fDoc}\n");
+                mdBuilder.Append($"\n### {name} Properties\n\n");
+                foreach (var property in tProperties)
+                {
+                    if (property.GetCustomAttributes<DocIgnoreAttribute>().Any()) continue;
+                    mdBuilder.Append($"- {GetTypeLink(property.PropertyType)} `{property.GetName()}`");
+                    if (property.SetMethod is null || property.SetMethod.IsPrivate) mdBuilder.Append(" **unsettable**");
+                    if (property.GetMethod is null || property.GetMethod.IsPrivate) mdBuilder.Append(" **unreadable**");
+                    mdBuilder.Append('\n');
+
+                    var fDoc = property.GetDoc();
+                    if (fDoc != "") mdBuilder.Append($"  > {fDoc}\n");
+                }
             }
 
+            var tFields = t.GetFields(bindAtt);
+            if (tFields.Any())
+            {
+                mdBuilder.Append($"\n### {name} Fields\n\n");
+                foreach (var field in tFields)
+                {
+                    if (field.GetCustomAttributes<DocIgnoreAttribute>().Any()) continue;
+                    mdBuilder.Append($"- {GetTypeLink(field.FieldType)} `{field.GetName()}`\n");
+                    var fDoc = field.GetDoc();
+                    if (fDoc != "") mdBuilder.Append($"  > {fDoc}\n");
+                }
+            }
+
+            var tMethods = t.GetMethods(bindAtt).Where(mi => !mi.IsSpecialName);
+            if (!tMethods.Any()) continue;
             mdBuilder.Append($"\n### {name} Methods\n\n");
-            foreach (var method in t.GetMethods(BindingFlags.Instance | BindingFlags.Public |
-                                                BindingFlags.DeclaredOnly))
+            foreach (var method in tMethods)
             {
                 if (method.GetCustomAttributes<DocIgnoreAttribute>().Any()) continue;
-                var useOverride = method.GetCustomAttributes<ArgumentOverrideAttribute>().Any();
                 var parameters = method.GetParameters();
                 var mName = method.GetName();
                 var para = GlobalPool.ContainsKey(name)
@@ -59,15 +93,10 @@ public sealed class Documentary
                     : null;
 
                 mdBuilder.Append($"- {GetTypeLink(method.ReturnType)} `{mName}`");
-                mdBuilder.Append('(');
 
-                if (parameters.Any() && useOverride)
+                if (para is not null)
                 {
-                    mdBuilder.Append(
-                        $"({string.Join(", ", parameters.Select(t => $"{GetTypeLink(t.ParameterType)} `{t.GetName()}`"))})");
-                }
-                else if (para is not null && !useOverride)
-                {
+                    mdBuilder.Append('(');
                     var fields = para.GetProperties();
                     for (var i = 0; i < fields.Length; i++)
                     {
@@ -75,36 +104,26 @@ public sealed class Documentary
                         mdBuilder.Append($"{GetTypeLink(field.PropertyType)} {field.Name}");
                         if (i < fields.Length - 1) mdBuilder.Append(", ");
                     }
+
+                    mdBuilder.Append(")\n");
                 }
-
-                mdBuilder.Append(')');
-
-                mdBuilder.Append('\n');
+                else if (parameters.Any())
+                {
+                    mdBuilder.Append(
+                        $"({string.Join(", ", parameters.Select(t => $"{GetTypeLink(t.ParameterType)} `{t.GetName()}`"))})\n");
+                }
+                else mdBuilder.Append("()\n");
 
                 var mDoc = method.GetDoc();
-                if (mDoc != "") mdBuilder.Append($"  - {mDoc}\n");
+                if (mDoc != "") mdBuilder.Append($"  > {mDoc}\n");
 
-                if (para is null || (useOverride && !parameters.Any())) continue;
-                var properties = para.GetConstructors().First().GetParameters();
-                if (useOverride)
+                if (para is null && !parameters.Any()) continue;
+                foreach (var paraInfo in parameters)
                 {
-                    foreach (var paraInfo in parameters)
-                    {
-                        var pDoc = paraInfo.GetDoc();
-                        if (pDoc == "") continue;
-                        mdBuilder.Append(
-                            $"  - Parameter: {GetTypeLink(paraInfo.ParameterType)} `{paraInfo.GetName()}`\n    - {paraInfo.GetDoc()}\n");
-                    }
-                }
-                else
-                {
-                    foreach (var prop in properties)
-                    {
-                        var pDoc = prop.GetDoc();
-                        if (pDoc == "") continue;
-                        mdBuilder.Append(
-                            $"  - Parameter: {GetTypeLink(prop.ParameterType)} `{prop.Name}`\n    - {pDoc}\n");
-                    }
+                    var pDoc = paraInfo.GetDoc();
+                    if (pDoc == "") continue;
+                    mdBuilder.Append(
+                        $"  - Parameter: {GetTypeLink(paraInfo.ParameterType)} `{paraInfo.GetName()}`\n    > {paraInfo.GetDoc()}\n");
                 }
             }
         }

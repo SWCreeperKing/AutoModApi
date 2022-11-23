@@ -1,6 +1,4 @@
-﻿//https://github.com/dotnet/roslyn/blob/main/docs/wiki/Scripting-API-Samples.md
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using ApiTester;
 using AutoModApi;
 
@@ -9,25 +7,11 @@ sw.Start();
 
 Api.projectName = "Testing Project";
 Api.ReadDir("Scripts");
-Api.Initialize("Scripts");
+Api.Initialize("Scripts", "notes");
 
 // loading
-var i = 0;
-Api.Compile();
-
-while (Api.CompilationPercent != 1)
-{
-    i++;
-    Task.Delay(150).GetAwaiter().GetResult();
-    Console.SetCursorPosition(0, 0);
-    Console.WriteLine(
-        $"Compilation Progress: [{Api.CompilationPercent:##0.##%}]         \nCompiling Please Wait [{".".Repeat(i)}{" ".Repeat(3 - i)}]      ");
-    i %= 3;
-}
-
-Console.SetCursorPosition(0, 1);
-Console.WriteLine("                                                   ");
-Console.SetCursorPosition(0, 1);
+// Api.Compile();
+Api.CompileWithLoading();
 
 // main test
 sw.Stop();
@@ -55,3 +39,8 @@ Console.WriteLine($"i: {test3.i} | time: [{end - start:###,###}]ms");
 // end
 sw.Stop();
 Console.WriteLine($"Run Time: [{sw.Elapsed}]");
+
+return;
+Console.ReadLine();
+Console.Clear();
+Api.CompileWithLoading();
